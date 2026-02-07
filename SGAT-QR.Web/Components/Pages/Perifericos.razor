@@ -9,34 +9,60 @@
 
 <MudText Typo="Typo.h4" Color="Color.Primary" Class="mb-6 font-weight-bold">Inventario de Periféricos</MudText>
 
-<MudTable Items="@_perifericos" Hover="true" Elevation="4" Loading="@_loading" Class="rounded-lg border-t-4 border-solid" Style="border-color: #9B111E;">
+<MudTable Items="@_perifericos" Hover="true" Elevation="4" Loading="@_loading" 
+          Filter="new Func<Periferico,bool>(FilterFunc1)" 
+          Class="rounded-lg border-t-4 border-solid" Style="border-color: #9B111E;">
     <ToolBarContent>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" 
                    StartIcon="@Icons.Material.Filled.Add" OnClick="AbrirNuevo" 
                    Class="rounded-pill px-6">Nuevo Periférico</MudButton>
         <MudSpacer />
-        <MudTextField @bind-Value="_search" Placeholder="Buscar..." Adornment="Adornment.Start" 
-                      AdornmentIcon="@Icons.Material.Filled.Search" Class="mt-0" />
+        <MudTextField @bind-Value="_search" Placeholder="Buscar por serial o marca..." 
+                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" 
+                      Class="mt-0" Immediate="true" />
     </ToolBarContent>
     <HeaderContent>
-        <MudTh>Tipo</MudTh>
-        <MudTh>Marca/Modelo</MudTh>
-        <MudTh>Serial</MudTh>
-        <MudTh>Vinculado</MudTh>
-        <MudTh>QR</MudTh>
-        <MudTh>Acciones</MudTh>
+        <MudTh Style="background-color: #9B111E; color: white;">Tipo</MudTh>
+        <MudTh Style="background-color: #9B111E; color: white;">Marca / Modelo</MudTh>
+        <MudTh Style="background-color: #9B111E; color: white;">Serial</MudTh>
+        <MudTh Style="background-color: #9B111E; color: white;">Equipo Vinculado</MudTh>
+        <MudTh Style="background-color: #9B111E; color: white;">QR</MudTh>
+        <MudTh Style="background-color: #9B111E; color: white;">Estado</MudTh>
+        <MudTh Style="background-color: #9B111E; color: white; width: 120px;">Acciones</MudTh>
     </HeaderContent>
     <RowTemplate>
-        <MudTd>@context.TipoPeriferico?.Nombre</MudTd>
-        <MudTd>@context.Marca @context.Modelo</MudTd>
-        <MudTd>@context.Serial</MudTd>
-        <MudTd>@(context.Equipo?.Nomenclatura ?? "Libre")</MudTd>
-        <MudTd><img src="@context.QRCodeUrl" width="40" height="40" /></MudTd>
+        <MudTd DataLabel="Tipo">@(context.TipoPeriferico?.Nombre ?? "N/A")</MudTd>
+        <MudTd DataLabel="Marca/Modelo">@($"{context.Marca} {context.Modelo}")</MudTd>
+        <MudTd DataLabel="Serial">@context.Serial</MudTd>
+        <MudTd DataLabel="Equipo">
+            @if (context.Equipo != null)
+            {
+                <MudChip T="string" Icon="@Icons.Material.Filled.Link" Color="Color.Info" Size="Size.Small">
+                    @(context.Equipo.Nomenclatura ?? "S/N")
+                </MudChip>
+            }
+            else
+            {
+                <MudText Typo="Typo.caption" Class="mud-text-Primary">Sin asignar</MudText>
+            }
+        </MudTd>
+        <MudTd DataLabel="QR">
+            @if (!string.IsNullOrEmpty(context.QRCodeUrl))
+            {
+                <img src="@context.QRCodeUrl" width="40" height="40" class="rounded shadow-sm" alt="QR" />
+            }
+        </MudTd>
+        <MudTd DataLabel="Estado">
+            <MudChip T="string" Color="@(context.Estado == "Activo" ? Color.Success : Color.Error)" Size="Size.Small">@context.Estado</MudChip>
+        </MudTd>
         <MudTd>
-            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Info" OnClick="@(() => AbrirEditar(context))" />
-            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => Eliminar(context.Id))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Info" Size="Size.Small" OnClick="@(() => AbrirEditar(context))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => Eliminar(context.Id))" />
         </MudTd>
     </RowTemplate>
+    <PagerContent>
+        <MudTablePager RowsPerPageString="Filas:" />
+    </PagerContent>
 </MudTable>
 
 @code {
@@ -49,7 +75,7 @@
     private async Task Cargar()
     {
         _loading = true;
-        _perifericos = await PerifericoService.ObtenerTodosAsync();
+        _perifericos = await PerifericoService.ObtenerTodosAsync() ?? new List<Periferico>();
         _loading = false;
     }
 
@@ -57,20 +83,43 @@
     {
         var tipos = await PerifericoService.ObtenerTiposAsync();
         var parameters = new DialogParameters { ["Periferico"] = new Periferico(), ["Tipos"] = tipos };
-        var dialog = await DialogService.ShowAsync<PerifericoDialog>("Registrar", parameters);
-        if (!(await dialog.Result).Canceled) await Cargar();
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        
+        var dialog = await DialogService.ShowAsync<PerifericoDialog>("Registrar Periférico", parameters, options);
+        var result = await dialog.Result;
+        
+        if (result != null && !result.Canceled) await Cargar();
     }
 
     private async Task AbrirEditar(Periferico p)
     {
         var tipos = await PerifericoService.ObtenerTiposAsync();
         var parameters = new DialogParameters { ["Periferico"] = p, ["Tipos"] = tipos };
-        var dialog = await DialogService.ShowAsync<PerifericoDialog>("Editar", parameters);
-        if (!(await dialog.Result).Canceled) await Cargar();
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        
+        var dialog = await DialogService.ShowAsync<PerifericoDialog>("Editar Periférico", parameters, options);
+        var result = await dialog.Result;
+        
+        if (result != null && !result.Canceled) await Cargar();
     }
 
     private async Task Eliminar(int id)
     {
-        if (await PerifericoService.EliminarAsync(id)) await Cargar();
+        bool? confirm = await DialogService.ShowMessageBox("Confirmar", "¿Desea eliminar este periférico?", "Eliminar", "Cancelar");
+        if (confirm == true && await PerifericoService.EliminarAsync(id))
+        {
+            Snackbar.Add("Periférico eliminado", Severity.Warning);
+            await Cargar();
+        }
+    }
+
+    private bool FilterFunc1(Periferico element) => FilterFunc(element, _search);
+    private bool FilterFunc(Periferico element, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString)) return true;
+        if (element.Serial.Contains(searchString, StringComparison.OrdinalIgnoreCase)) return true;
+        if (element.Marca.Contains(searchString, StringComparison.OrdinalIgnoreCase)) return true;
+        if (element.Modelo.Contains(searchString, StringComparison.OrdinalIgnoreCase)) return true;
+        return false;
     }
 }
