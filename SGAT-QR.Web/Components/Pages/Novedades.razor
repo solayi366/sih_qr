@@ -1,0 +1,114 @@
+@page "/novedades"
+@using SGAT_QR.Core.Entities
+@using SGAT_QR.Core.Interfaces
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject INovedadService NovedadService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h4" Color="Color.Primary" Class="mb-6 font-weight-bold">Bitácora de Novedades TI</MudText>
+
+<MudTable Items="@_novedades" Hover="true" Elevation="4" Loading="@_loading" 
+          Class="rounded-lg border-t-4 border-solid" Style="border-color: #9B111E;">
+    <ToolBarContent>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" 
+                   StartIcon="@Icons.Material.Filled.Add" OnClick="AbrirNuevo" 
+                   Class="rounded-pill px-6">Reportar Falla</MudButton>
+        <MudSpacer />
+        <MudTextField @bind-Value="_search" Placeholder="Buscar por descripción..." Adornment="Adornment.Start" 
+                      AdornmentIcon="@Icons.Material.Filled.Search" Class="mt-0" Immediate="true" />
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh Style="background-color: #9B111E; color: white;">Fecha</MudTh>
+        <MudTh Style="background-color: #9B111E; color: white;">Activo Afectado</MudTh>
+        <MudTh Style="background-color: #9B111E; color: white;">Severidad</MudTh>
+        <MudTh Style="background-color: #9B111E; color: white;">Descripción</MudTh>
+        <MudTh Style="background-color: #9B111E; color: white;">Estado</MudTh>
+        <MudTh Style="background-color: #9B111E; color: white; width: 120px;">Acciones</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Fecha">@context.FechaReporte.ToString("dd/MM/yyyy HH:mm")</MudTd>
+        <MudTd DataLabel="Activo Afectado">
+            @if (context.Equipo != null)
+            {
+                <MudText Typo="Typo.body2" Class="font-weight-bold">@(context.Equipo?.Nomenclatura ?? "N/A")</MudText>
+                <MudText Typo="Typo.caption">Equipo</MudText>
+            }
+            else if (context.Periferico != null)
+            {
+                <MudText Typo="Typo.body2" Class="font-weight-bold">@(context.Periferico?.Serial ?? "N/A")</MudText>
+                <MudText Typo="Typo.caption">Periférico</MudText>
+            }
+        </MudTd>
+        <MudTd DataLabel="Severidad">
+            <MudChip T="string" Color="@GetSeveridadColor(context.Severidad)" Size="Size.Small" Variant="Variant.Filled">
+                @context.Severidad
+            </MudChip>
+        </MudTd>
+        <MudTd DataLabel="Descripción">@context.Descripcion</MudTd>
+        <MudTd DataLabel="Estado">
+            <MudChip T="string" Variant="Variant.Text" Color="@(context.Estado == "Resuelta" ? Color.Success : Color.Error)">
+                @context.Estado
+            </MudChip>
+        </MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Info" Size="Size.Small" OnClick="@(() => AbrirEditar(context))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => Eliminar(context.Id))" />
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager RowsPerPageString="Filas:" />
+    </PagerContent>
+</MudTable>
+
+@code {
+    private List<Novedad> _novedades = new();
+    private bool _loading = true;
+    private string _search = "";
+
+    protected override async Task OnInitializedAsync() => await Cargar();
+
+    private async Task Cargar()
+    {
+        _loading = true;
+        _novedades = await NovedadService.ObtenerTodasAsync() ?? new List<Novedad>();
+        _loading = false;
+    }
+
+    private Color GetSeveridadColor(string s) => s switch
+    {
+        "Alta" => Color.Error,
+        "Media" => Color.Warning,
+        "Baja" => Color.Info,
+        _ => Color.Default
+    };
+
+    private async Task AbrirNuevo()
+    {
+        var parameters = new DialogParameters { ["Novedad"] = new Novedad { Severidad = "Media", Estado = "Reportada" } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<NovedadDialog>("Reporte Técnico", parameters, options);
+        var result = await dialog.Result;
+        if (result != null && !result.Canceled) await Cargar();
+    }
+
+    private async Task AbrirEditar(Novedad n)
+    {
+        var parameters = new DialogParameters { ["Novedad"] = n };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<NovedadDialog>("Gestionar Novedad", parameters, options);
+        var result = await dialog.Result;
+        if (result != null && !result.Canceled) await Cargar();
+    }
+
+    private async Task Eliminar(int id)
+    {
+        bool? confirm = await DialogService.ShowMessageBox("Atención", "¿Desea eliminar este reporte?", "Eliminar", "Cancelar");
+        if (confirm == true && await NovedadService.EliminarAsync(id))
+        {
+            Snackbar.Add("Registro eliminado", Severity.Warning);
+            await Cargar();
+        }
+    }
+}

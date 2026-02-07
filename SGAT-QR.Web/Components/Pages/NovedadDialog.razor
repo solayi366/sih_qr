@@ -1,0 +1,131 @@
+@using SGAT_QR.Core.Entities
+@using SGAT_QR.Core.Interfaces
+@inject INovedadService NovedadService
+@inject IEquipoService EquipoService
+@inject IPerifericoService PerifericoService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Color="Color.Warning">
+            <MudIcon Icon="@Icons.Material.Filled.ReportProblem" Class="mr-3 mb-n1"/>
+            @(Novedad.Id == 0 ? "Reportar Nueva Novedad" : "Editar Reporte")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudSelect T="string" Label="¿Qué falló?" @bind-Value="_tipoActivo" Variant="Variant.Outlined" 
+                           Disabled="@(Novedad.Id != 0)">
+                    <MudSelectItem Value="@("Equipo")">Computador / Servidor</MudSelectItem>
+                    <MudSelectItem Value="@("Periferico")">Periférico (Mouse, Monitor, etc.)</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                @if (_tipoActivo == "Equipo")
+                {
+                    <MudAutocomplete T="Equipo" Label="Buscar Equipo" Value="_equipoSeleccionado" ValueChanged="OnEquipoChanged"
+                                     SearchFunc="@SearchEquipos" ToStringFunc="@(e => e == null ? "" : $"{e.Nomenclatura} - {e.Marca}")"
+                                     Variant="Variant.Outlined" Required="true" AdornmentIcon="@Icons.Material.Filled.Computer" />
+                }
+                else
+                {
+                    <MudAutocomplete T="Periferico" Label="Buscar Periférico" Value="_perifericoSeleccionado" ValueChanged="OnPerifericoChanged"
+                                     SearchFunc="@SearchPerifericos" ToStringFunc="@(p => p == null ? "" : $"{p.Serial} - {p.Marca}")"
+                                     Variant="Variant.Outlined" Required="true" AdornmentIcon="@Icons.Material.Filled.Mouse" />
+                }
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudSelect T="string" Label="Severidad" @bind-Value="Novedad.Severidad" Variant="Variant.Outlined">
+                    <MudSelectItem Value="@("Baja")">Baja (Mantenimiento Rutina)</MudSelectItem>
+                    <MudSelectItem Value="@("Media")">Media (Falla Parcial)</MudSelectItem>
+                    <MudSelectItem Value="@("Alta")">Alta (Inoperativo)</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudTextField Label="Descripción del Problema" @bind-Value="Novedad.Descripcion" 
+                              Variant="Variant.Outlined" Lines="4" Required="true" />
+            </MudItem>
+
+            @if (Novedad.Id != 0)
+            {
+                <MudItem xs="12">
+                    <MudDivider Class="my-4" />
+                    <MudText Typo="Typo.subtitle2" Color="Color.Success">Resolución Técnica</MudText>
+                    <MudTextField Label="Solución Aplicada" @bind-Value="Novedad.SolucionAplicada" 
+                                  Variant="Variant.Outlined" Lines="3" Class="mt-2" />
+                </MudItem>
+            }
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancelar</MudButton>
+        <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="Submit" Class="px-8">
+            @(Novedad.Id == 0 ? "Enviar Reporte" : "Actualizar Reporte")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public Novedad Novedad { get; set; } = new();
+
+    private string _tipoActivo = "Equipo";
+    private Equipo? _equipoSeleccionado;
+    private Periferico? _perifericoSeleccionado;
+    
+    private List<Equipo> _listaEquipos = new();
+    private List<Periferico> _listaPerifericos = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _listaEquipos = await EquipoService.ObtenerTodosAsync() ?? new List<Equipo>();
+        _listaPerifericos = await PerifericoService.ObtenerTodosAsync() ?? new List<Periferico>();
+
+        if (Novedad.Id != 0)
+        {
+            if (Novedad.EquipoId != null)
+            {
+                _tipoActivo = "Equipo";
+                _equipoSeleccionado = _listaEquipos.FirstOrDefault(x => x.Id == Novedad.EquipoId);
+            }
+            else if (Novedad.PerifericoId != null)
+            {
+                _tipoActivo = "Periferico";
+                _perifericoSeleccionado = _listaPerifericos.FirstOrDefault(x => x.Id == Novedad.PerifericoId);
+            }
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private Task<IEnumerable<Equipo>> SearchEquipos(string v, CancellationToken t) =>
+        Task.FromResult(_listaEquipos.Where(x => string.IsNullOrEmpty(v) || x.Nomenclatura.Contains(v, StringComparison.OrdinalIgnoreCase)));
+
+    private Task<IEnumerable<Periferico>> SearchPerifericos(string v, CancellationToken t) =>
+        Task.FromResult(_listaPerifericos.Where(x => string.IsNullOrEmpty(v) || x.Serial.Contains(v, StringComparison.OrdinalIgnoreCase)));
+
+    private void OnEquipoChanged(Equipo e) { _equipoSeleccionado = e; Novedad.EquipoId = e?.Id; Novedad.PerifericoId = null; }
+    private void OnPerifericoChanged(Periferico p) { _perifericoSeleccionado = p; Novedad.PerifericoId = p?.Id; Novedad.EquipoId = null; }
+
+    private async Task Submit()
+    {
+        if (string.IsNullOrEmpty(Novedad.Descripcion) || (Novedad.EquipoId == null && Novedad.PerifericoId == null))
+        {
+            Snackbar.Add("Debe seleccionar un activo y describir la falla", Severity.Warning);
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(Novedad.SolucionAplicada))
+        {
+            Novedad.Estado = "Resuelta";
+            Novedad.FechaResolucion = DateTime.Now;
+        }
+
+        var res = await NovedadService.GuardarAsync(Novedad);
+        if (res) MudDialog.Close(DialogResult.Ok(true));
+    }
+}
