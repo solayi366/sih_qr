@@ -62,6 +62,11 @@ public class PerifericoService : IPerifericoService
         return await _context.SaveChangesAsync() > 0;
     }
 
+    public async Task<int> ContarTotalAsync()
+    {
+        return await _context.Perifericos.CountAsync();
+    }
+
     private string GenerarQR(string texto)
     {
         if (string.IsNullOrEmpty(texto)) return string.Empty;

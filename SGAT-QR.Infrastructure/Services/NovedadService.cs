@@ -67,4 +67,9 @@ public class NovedadService : INovedadService
         _context.Novedades.Remove(novedad);
         return await _context.SaveChangesAsync() > 0;
     }
+
+    public async Task<int> ContarPendientesAsync()
+    {
+        return await _context.Novedades.CountAsync(n => n.Estado != "Resuelta");
+    }
 }

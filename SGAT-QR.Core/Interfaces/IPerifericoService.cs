@@ -9,4 +9,5 @@ public interface IPerifericoService
     Task<List<TipoPeriferico>> ObtenerTiposAsync();
     Task<bool> GuardarAsync(Periferico periferico);
     Task<bool> EliminarAsync(int id);
+    Task<int> ContarTotalAsync(); // Método para el Dashboard
 }

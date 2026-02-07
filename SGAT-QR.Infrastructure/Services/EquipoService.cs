@@ -44,7 +44,6 @@ public class EquipoService : IEquipoService
 
     public async Task<bool> GuardarAsync(Equipo equipo)
     {
-        // El QR se basa en la Nomenclatura única para rastreo físico
         equipo.QRCodeUrl = GenerarQR(equipo.Nomenclatura);
 
         if (equipo.Id == 0)
@@ -69,12 +68,18 @@ public class EquipoService : IEquipoService
         return await _context.SaveChangesAsync() > 0;
     }
 
+    public async Task<int> ContarTotalAsync()
+    {
+        return await _context.Equipos.CountAsync();
+    }
+
     private string GenerarQR(string texto)
     {
         if (string.IsNullOrEmpty(texto)) return string.Empty;
         using QRCodeGenerator qrGenerator = new QRCodeGenerator();
         using QRCodeData qrCodeData = qrGenerator.CreateQrCode(texto, QRCodeGenerator.ECCLevel.Q);
         using PngByteQRCode qrCode = new PngByteQRCode(qrCodeData);
-        return $"data:image/png;base64,{Convert.ToBase64String(qrCode.GetGraphic(20))}";
+        byte[] qrCodeAsPngByteArr = qrCode.GetGraphic(20);
+        return $"data:image/png;base64,{Convert.ToBase64String(qrCodeAsPngByteArr)}";
     }
 }

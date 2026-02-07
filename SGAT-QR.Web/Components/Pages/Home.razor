@@ -1,52 +1,106 @@
 ﻿@page "/"
 @using Microsoft.AspNetCore.Authorization
+@using SGAT_QR.Core.Interfaces
 @attribute [Authorize]
+@inject IEquipoService EquipoService
+@inject IPerifericoService PerifericoService
+@inject INovedadService NovedadService
 
-<MudText Typo="Typo.h4" Class="mb-6 font-weight-bold" Color="Color.Primary">Dashboard TI</MudText>
+<MudText Typo="Typo.h4" Class="mb-6 font-weight-bold" Color="Color.Primary">Dashboard SGAT-QR</MudText>
 
 <MudGrid>
+    @* Card Equipos - Estilo Ruby *@
     <MudItem xs="12" sm="6" md="3">
         <MudPaper Elevation="4" Class="pa-4 rounded-lg border-l-4 border-solid" Style="border-color: #9B111E;">
             <MudStack Row="true" AlignItems="AlignItems.Center">
                 <MudIcon Icon="@Icons.Material.Filled.Computer" Color="Color.Primary" Size="Size.Large" />
                 <div>
                     <MudText Typo="Typo.subtitle2" Class="mud-text-secondary">Equipos</MudText>
-                    <MudText Typo="Typo.h5" Class="font-weight-bold">0</MudText>
+                    <MudText Typo="Typo.h5" Class="font-weight-bold">@_totalEquipos</MudText>
                 </div>
             </MudStack>
         </MudPaper>
     </MudItem>
+
+    @* Card Periféricos - Estilo Dark Ruby *@
     <MudItem xs="12" sm="6" md="3">
         <MudPaper Elevation="4" Class="pa-4 rounded-lg border-l-4 border-solid" Style="border-color: #263238;">
             <MudStack Row="true" AlignItems="AlignItems.Center">
                 <MudIcon Icon="@Icons.Material.Filled.Mouse" Color="Color.Secondary" Size="Size.Large" />
                 <div>
                     <MudText Typo="Typo.subtitle2" Class="mud-text-secondary">Periféricos</MudText>
-                    <MudText Typo="Typo.h5" Class="font-weight-bold">0</MudText>
+                    <MudText Typo="Typo.h5" Class="font-weight-bold">@_totalPerifericos</MudText>
                 </div>
             </MudStack>
         </MudPaper>
     </MudItem>
+
+    @* Card Novedades - Estilo Warning Ruby *@
     <MudItem xs="12" sm="6" md="3">
-        <MudPaper Elevation="4" Class="pa-4 rounded-lg border-l-4 border-solid" Style="border-color: #E65100;">
+        <MudPaper Elevation="4" Class="pa-4 rounded-lg border-l-4 border-solid" Style="border-color: #FFA000;">
             <MudStack Row="true" AlignItems="AlignItems.Center">
                 <MudIcon Icon="@Icons.Material.Filled.ReportProblem" Color="Color.Warning" Size="Size.Large" />
                 <div>
-                    <MudText Typo="Typo.subtitle2" Class="mud-text-secondary">Novedades</MudText>
-                    <MudText Typo="Typo.h5" Class="font-weight-bold">0</MudText>
+                    <MudText Typo="Typo.subtitle2" Class="mud-text-secondary">Fallas Pendientes</MudText>
+                    <MudText Typo="Typo.h5" Class="font-weight-bold">@_novedadesPendientes</MudText>
                 </div>
             </MudStack>
         </MudPaper>
     </MudItem>
+
+    @* Card Usuarios Activos *@
     <MudItem xs="12" sm="6" md="3">
         <MudPaper Elevation="4" Class="pa-4 rounded-lg border-l-4 border-solid" Style="border-color: #2E7D32;">
             <MudStack Row="true" AlignItems="AlignItems.Center">
-                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" />
+                <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Success" Size="Size.Large" />
                 <div>
-                    <MudText Typo="Typo.subtitle2" Class="mud-text-secondary">Salud Sistema</MudText>
-                    <MudText Typo="Typo.h5" Class="font-weight-bold">100%</MudText>
+                    <MudText Typo="Typo.subtitle2" Class="mud-text-secondary">Disponibilidad</MudText>
+                    <MudText Typo="Typo.h5" Class="font-weight-bold">99.2%</MudText>
                 </div>
             </MudStack>
         </MudPaper>
     </MudItem>
+
+    @* Gráfica de Resumen *@
+    <MudItem xs="12" md="8">
+        <MudPaper Elevation="4" Class="pa-6 rounded-lg" Height="350px">
+            <MudText Typo="Typo.h6" Class="mb-4">Estado General del Inventario</MudText>
+            <MudChart ChartType="ChartType.Donut" InputData="@_chartData" InputLabels="@_chartLabels" Width="250px" Height="250px" />
+        </MudPaper>
+    </MudItem>
+
+    @* Acciones Rápidas *@
+    <MudItem xs="12" md="4">
+        <MudPaper Elevation="4" Class="pa-6 rounded-lg" Height="350px">
+            <MudText Typo="Typo.h6" Class="mb-4">Acciones Directas</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="mb-4 py-3 rounded-pill" href="/equipos">
+                Ir a Equipos
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" FullWidth="true" Class="mb-4 py-3 rounded-pill" href="/perifericos">
+                Ir a Periféricos
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Warning" FullWidth="true" Class="py-3 rounded-pill" href="/novedades">
+                Reportar Falla
+            </MudButton>
+        </MudPaper>
+    </MudItem>
 </MudGrid>
+
+@code {
+    private int _totalEquipos;
+    private int _totalPerifericos;
+    private int _novedadesPendientes;
+
+    private double[] _chartData = new double[2];
+    private string[] _chartLabels = { "Equipos", "Periféricos" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _totalEquipos = await EquipoService.ContarTotalAsync();
+        _totalPerifericos = await PerifericoService.ContarTotalAsync();
+        _novedadesPendientes = await NovedadService.ContarPendientesAsync();
+
+        _chartData[0] = _totalEquipos;
+        _chartData[1] = _totalPerifericos;
+    }
+}

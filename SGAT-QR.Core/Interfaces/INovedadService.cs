@@ -9,4 +9,5 @@ public interface INovedadService
     Task<bool> GuardarAsync(Novedad novedad);
     Task<bool> EliminarAsync(int id);
     Task<bool> ResolverNovedadAsync(int id, string solucion);
+    Task<int> ContarPendientesAsync(); // Método para el Dashboard
 }
