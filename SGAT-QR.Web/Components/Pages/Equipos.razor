@@ -16,7 +16,7 @@
         <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" 
                    OnClick="AbrirDialogoNuevo" Class="rounded-pill px-6 mr-2">Nuevo Activo</MudButton>
         <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Custom.FileFormats.FileExcel" 
-                   OnClick="ExportarExcel" Class="rounded-pill px-6">Exportar Datos</MudButton>
+                   OnClick="ExportarExcel" Class="rounded-pill px-6">Exportar</MudButton>
         <MudSpacer />
         <MudTextField @bind-Value="_searchString" Placeholder="Buscar por Nomenclatura o Serial..." 
                       Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" 
@@ -28,30 +28,33 @@
         <MudTh Style="background-color: #9B111E; color: white; font-weight: bold;">Serial</MudTh>
         <MudTh Style="background-color: #9B111E; color: white; font-weight: bold;">QR</MudTh>
         <MudTh Style="background-color: #9B111E; color: white; font-weight: bold;">Estado</MudTh>
-        <MudTh Style="background-color: #9B111E; color: white; font-weight: bold; width: 150px;">Acciones</MudTh>
+        <MudTh Style="background-color: #9B111E; color: white; font-weight: bold; width: 180px;">Acciones</MudTh>
     </HeaderContent>
     <RowTemplate>
-        <MudTd DataLabel="Nomenclatura">@context.Nomenclatura</MudTd>
-        <MudTd DataLabel="Marca/Modelo">@($"{context.Marca} {context.Modelo}")</MudTd>
-        <MudTd DataLabel="Serial">@context.Serial</MudTd>
-        <MudTd DataLabel="QR">
+        <MudTd>@context.Nomenclatura</MudTd>
+        <MudTd>@context.Marca @context.Modelo</MudTd>
+        <MudTd>@context.Serial</MudTd>
+        <MudTd>
             @if (!string.IsNullOrEmpty(context.QRCodeUrl))
             {
                 <img src="@context.QRCodeUrl" width="40" height="40" class="rounded cursor-pointer shadow-sm" @onclick="@(() => VerDetalle(context))" />
             }
         </MudTd>
-        <MudTd DataLabel="Estado">
+        <MudTd>
             <MudChip T="string" Color="@(context.Estado == "Activo" ? Color.Success : Color.Error)" Size="Size.Small" Variant="Variant.Filled">
                 @context.Estado
             </MudChip>
         </MudTd>
         <MudTd>
             <MudStack Row="true">
-                <MudTooltip Text="Ver Detalles">
+                <MudTooltip Text="Ficha Técnica">
                     <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Primary" Size="Size.Small" OnClick="@(() => VerDetalle(context))" />
                 </MudTooltip>
                 <MudTooltip Text="Editar">
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Info" Size="Size.Small" OnClick="@(() => AbrirDialogoEditar(context))" />
+                </MudTooltip>
+                <MudTooltip Text="Imprimir Sticker">
+                    <MudIconButton Icon="@Icons.Material.Filled.Print" Color="Color.Default" Size="Size.Small" OnClick="@(() => ImprimirEtiqueta(context.Id))" />
                 </MudTooltip>
                 <MudTooltip Text="Eliminar">
                     <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => Eliminar(context.Id))" />
@@ -59,9 +62,6 @@
             </MudStack>
         </MudTd>
     </RowTemplate>
-    <PagerContent>
-        <MudTablePager RowsPerPageString="Registros por página:" />
-    </PagerContent>
 </MudTable>
 
 @code {
@@ -82,14 +82,23 @@
     {
         var bytes = await EquipoService.GenerarExcelAsync();
         await JS.InvokeVoidAsync("descargarArchivo", $"Equipos_{DateTime.Now:yyyyMMdd}.xlsx", Convert.ToBase64String(bytes));
-        Snackbar.Add("Reporte de equipos generado", Severity.Success);
+        Snackbar.Add("Excel de inventario generado", Severity.Success);
+    }
+
+    private async Task ImprimirEtiqueta(int id)
+    {
+        var bytes = await EquipoService.GenerarEtiquetaPdfAsync(id);
+        if (bytes.Length > 0)
+        {
+            await JS.InvokeVoidAsync("descargarArchivo", $"Sticker_{id}.pdf", Convert.ToBase64String(bytes));
+            Snackbar.Add("Etiqueta 7.62x2.50 generada", Severity.Success);
+        }
     }
 
     private async Task VerDetalle(Equipo equipo)
     {
         var parameters = new DialogParameters { ["Equipo"] = equipo };
-        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
-        await DialogService.ShowAsync<EquipoDetalleDialog>("Ficha Técnica del Activo", parameters, options);
+        await DialogService.ShowAsync<EquipoDetalleDialog>("Ficha del Activo", parameters, new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
     }
 
     private async Task AbrirDialogoNuevo()
@@ -97,7 +106,7 @@
         var tipos = await EquipoService.ObtenerTiposAsync();
         var deps = await EquipoService.ObtenerDependenciasAsync();
         var parameters = new DialogParameters { ["Equipo"] = new Equipo { Estado = "Activo" }, ["Tipos"] = tipos, ["Dependencias"] = deps };
-        var dialog = await DialogService.ShowAsync<EquipoDialog>("Registrar Nuevo Activo", parameters, new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
+        var dialog = await DialogService.ShowAsync<EquipoDialog>("Registrar Activo", parameters, new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
         if (!(await dialog.Result).Canceled) await CargarEquipos();
     }
 
@@ -106,13 +115,13 @@
         var tipos = await EquipoService.ObtenerTiposAsync();
         var deps = await EquipoService.ObtenerDependenciasAsync();
         var parameters = new DialogParameters { ["Equipo"] = equipo, ["Tipos"] = tipos, ["Dependencias"] = deps };
-        var dialog = await DialogService.ShowAsync<EquipoDialog>("Actualizar Datos", parameters, new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
+        var dialog = await DialogService.ShowAsync<EquipoDialog>("Editar Activo", parameters, new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
         if (!(await dialog.Result).Canceled) await CargarEquipos();
     }
 
     private async Task Eliminar(int id)
     {
-        bool? confirm = await DialogService.ShowMessageBox("Atención", "¿Desea eliminar este equipo permanentemente?", "Eliminar", "Cancelar");
+        bool? confirm = await DialogService.ShowMessageBox("Confirmar", "¿Eliminar permanentemente?", "Eliminar", "Cancelar");
         if (confirm == true && await EquipoService.EliminarAsync(id)) await CargarEquipos();
     }
 
@@ -121,7 +130,6 @@
     {
         if (string.IsNullOrWhiteSpace(searchString)) return true;
         return element.Nomenclatura.Contains(searchString, StringComparison.OrdinalIgnoreCase) || 
-               element.Serial.Contains(searchString, StringComparison.OrdinalIgnoreCase) ||
-               element.Marca.Contains(searchString, StringComparison.OrdinalIgnoreCase);
+               element.Serial.Contains(searchString, StringComparison.OrdinalIgnoreCase);
     }
 }

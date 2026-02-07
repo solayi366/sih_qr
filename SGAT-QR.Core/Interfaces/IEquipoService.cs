@@ -12,4 +12,5 @@ public interface IEquipoService
     Task<bool> EliminarAsync(int id);
     Task<int> ContarTotalAsync();
     Task<byte[]> GenerarExcelAsync();
+    Task<byte[]> GenerarEtiquetaPdfAsync(int id); // Nuevo: Generación de etiqueta PDF
 }

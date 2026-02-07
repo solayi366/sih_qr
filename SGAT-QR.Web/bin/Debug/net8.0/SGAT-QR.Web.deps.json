@@ -1248,6 +1248,7 @@
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "8.0.0",
           "Microsoft.EntityFrameworkCore.SqlServer": "8.0.0",
           "QRCoder": "1.6.0",
+          "QuestPDF": "2024.3.0",
           "SGAT-QR.Core": "1.0.0"
         },
         "runtime": {

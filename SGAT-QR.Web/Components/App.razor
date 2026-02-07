@@ -17,11 +17,13 @@
     <script src="_framework/blazor.web.js"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script>
-        // Script Pro para descarga de Excel y QR
+        // Manejador de descargas para PDF y Excel
         window.descargarArchivo = (nombre, base64) => {
             const link = document.createElement('a');
             link.download = nombre;
-            link.href = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + base64;
+            const ext = nombre.split('.').pop().toLowerCase();
+            const mime = ext === 'pdf' ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+            link.href = `data:${mime};base64,${base64}`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
