@@ -1,0 +1,76 @@
+@page "/perifericos"
+@using SGAT_QR.Core.Entities
+@using SGAT_QR.Core.Interfaces
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject IPerifericoService PerifericoService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudText Typo="Typo.h4" Color="Color.Primary" Class="mb-6 font-weight-bold">Inventario de Periféricos</MudText>
+
+<MudTable Items="@_perifericos" Hover="true" Elevation="4" Loading="@_loading" Class="rounded-lg border-t-4 border-solid" Style="border-color: #9B111E;">
+    <ToolBarContent>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" 
+                   StartIcon="@Icons.Material.Filled.Add" OnClick="AbrirNuevo" 
+                   Class="rounded-pill px-6">Nuevo Periférico</MudButton>
+        <MudSpacer />
+        <MudTextField @bind-Value="_search" Placeholder="Buscar..." Adornment="Adornment.Start" 
+                      AdornmentIcon="@Icons.Material.Filled.Search" Class="mt-0" />
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Tipo</MudTh>
+        <MudTh>Marca/Modelo</MudTh>
+        <MudTh>Serial</MudTh>
+        <MudTh>Vinculado</MudTh>
+        <MudTh>QR</MudTh>
+        <MudTh>Acciones</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.TipoPeriferico?.Nombre</MudTd>
+        <MudTd>@context.Marca @context.Modelo</MudTd>
+        <MudTd>@context.Serial</MudTd>
+        <MudTd>@(context.Equipo?.Nomenclatura ?? "Libre")</MudTd>
+        <MudTd><img src="@context.QRCodeUrl" width="40" height="40" /></MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Info" OnClick="@(() => AbrirEditar(context))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => Eliminar(context.Id))" />
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+
+@code {
+    private List<Periferico> _perifericos = new();
+    private bool _loading = true;
+    private string _search = "";
+
+    protected override async Task OnInitializedAsync() => await Cargar();
+
+    private async Task Cargar()
+    {
+        _loading = true;
+        _perifericos = await PerifericoService.ObtenerTodosAsync();
+        _loading = false;
+    }
+
+    private async Task AbrirNuevo()
+    {
+        var tipos = await PerifericoService.ObtenerTiposAsync();
+        var parameters = new DialogParameters { ["Periferico"] = new Periferico(), ["Tipos"] = tipos };
+        var dialog = await DialogService.ShowAsync<PerifericoDialog>("Registrar", parameters);
+        if (!(await dialog.Result).Canceled) await Cargar();
+    }
+
+    private async Task AbrirEditar(Periferico p)
+    {
+        var tipos = await PerifericoService.ObtenerTiposAsync();
+        var parameters = new DialogParameters { ["Periferico"] = p, ["Tipos"] = tipos };
+        var dialog = await DialogService.ShowAsync<PerifericoDialog>("Editar", parameters);
+        if (!(await dialog.Result).Canceled) await Cargar();
+    }
+
+    private async Task Eliminar(int id)
+    {
+        if (await PerifericoService.EliminarAsync(id)) await Cargar();
+    }
+}

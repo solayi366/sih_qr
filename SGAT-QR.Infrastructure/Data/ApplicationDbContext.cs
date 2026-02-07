@@ -1,6 +1,6 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SGAT_QR.Core.Entities;
 
 namespace SGAT_QR.Infrastructure.Data;
@@ -9,32 +9,36 @@ public class ApplicationDbContext : IdentityDbContext<Usuario, IdentityRole<int>
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
+    // Tablas Principales
     public DbSet<Equipo> Equipos { get; set; }
     public DbSet<Periferico> Perifericos { get; set; }
     public DbSet<Novedad> Novedades { get; set; }
+
+    // Catálogos
     public DbSet<TipoEquipo> TiposEquipo { get; set; }
-    public DbSet<TipoPeriferico> TiposPeriferico { get; set; }
+    public DbSet<TipoPeriferico> TiposPerifericos { get; set; } 
     public DbSet<Dependencia> Dependencias { get; set; }
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    protected override void OnModelCreating(ModelBuilder builder)
     {
-        base.OnModelCreating(modelBuilder);
+        base.OnModelCreating(builder);
 
-        // Mapeo de tablas principales
-        modelBuilder.Entity<Equipo>().ToTable("tab_Equipos");
-        modelBuilder.Entity<Periferico>().ToTable("tab_Perifericos");
-        modelBuilder.Entity<Novedad>().ToTable("tab_Novedades");
-        modelBuilder.Entity<TipoEquipo>().ToTable("cat_TiposEquipo");
-        modelBuilder.Entity<TipoPeriferico>().ToTable("cat_TiposPerifericos");
-        modelBuilder.Entity<Dependencia>().ToTable("cat_Dependencias");
+        // Nomenclatura Profesional
+        builder.Entity<Equipo>().ToTable("tab_Equipos");
+        builder.Entity<Periferico>().ToTable("tab_Perifericos");
+        builder.Entity<Novedad>().ToTable("tab_Novedades");
+        builder.Entity<Usuario>().ToTable("tab_Usuarios");
 
-        // Identity personalizado con prefijos
-        modelBuilder.Entity<Usuario>().ToTable("tab_Usuarios");
-        modelBuilder.Entity<IdentityRole<int>>().ToTable("tab_Roles");
-        modelBuilder.Entity<IdentityUserRole<int>>().ToTable("rel_UsuarioRoles");
-        modelBuilder.Entity<IdentityUserClaim<int>>().ToTable("tab_UsuarioClaims");
-        modelBuilder.Entity<IdentityUserLogin<int>>().ToTable("tab_UsuarioLogins");
-        modelBuilder.Entity<IdentityRoleClaim<int>>().ToTable("tab_RolClaims");
-        modelBuilder.Entity<IdentityUserToken<int>>().ToTable("tab_UsuarioTokens");
+        builder.Entity<TipoEquipo>().ToTable("cat_TiposEquipo");
+        builder.Entity<TipoPeriferico>().ToTable("cat_TiposPerifericos");
+        builder.Entity<Dependencia>().ToTable("cat_Dependencias");
+
+        // Configuraciones de Identity para seguir la nomenclatura
+        builder.Entity<IdentityRole<int>>().ToTable("tab_Roles");
+        builder.Entity<IdentityUserRole<int>>().ToTable("rel_UsuarioRoles");
+        builder.Entity<IdentityUserClaim<int>>().ToTable("tab_UsuarioClaims");
+        builder.Entity<IdentityUserLogin<int>>().ToTable("tab_UsuarioLogins");
+        builder.Entity<IdentityRoleClaim<int>>().ToTable("tab_RolClaims");
+        builder.Entity<IdentityUserToken<int>>().ToTable("tab_UsuarioTokens");
     }
 }

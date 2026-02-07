@@ -10,12 +10,9 @@ using Microsoft.AspNetCore.Components.Server;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Configuración de la Base de Datos
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<ApplicationDbContext>(options => 
-    options.UseSqlServer(connectionString));
+builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 
-// 2. Configuración de Seguridad e Identity
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
 
@@ -27,42 +24,32 @@ builder.Services.AddIdentity<Usuario, IdentityRole<int>>(options => {
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-// 3. UI, Controladores y Servicios de la Aplicación
 builder.Services.AddControllersWithViews();
 builder.Services.AddMudServices();
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
-// Registro de servicios de negocio
 builder.Services.AddScoped<IEquipoService, EquipoService>();
+builder.Services.AddScoped<IPerifericoService, PerifericoService>();
 
 var app = builder.Build();
 
-// 4. Inicialización de Datos (Seed Data)
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<ApplicationDbContext>();
     var userManager = services.GetRequiredService<UserManager<Usuario>>();
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole<int>>>();
-    
-    // Ejecución de la siembra de datos iniciales
     DbInitializer.Initialize(context, userManager, roleManager).GetAwaiter().GetResult();
 }
 
-// 5. Pipeline de Middleware
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
-
-// El orden de estos tres es crítico en .NET 8
 app.UseAntiforgery();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Mapeo de rutas para controladores y componentes Blazor
-app.MapControllers();
+app.MapControllers(); 
 app.MapRazorComponents<SGAT_QR.Web.Components.App>()
     .AddInteractiveServerRenderMode();
 

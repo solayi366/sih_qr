@@ -7,7 +7,7 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<MudText Typo="Typo.h4" Color="Color.Primary" Class="mb-6 font-weight-bold">Inventario Maestro de Activos</MudText>
+<MudText Typo="Typo.h4" Color="Color.Primary" Class="mb-6 font-weight-bold">Control de Inventario TI</MudText>
 
 <MudTable Items="@_equipos" Hover="true" Elevation="4" Loading="@_loading" 
           Filter="new Func<Equipo,bool>(FilterFunc1)" Class="rounded-lg border-t-4 border-solid" Style="border-color: #9B111E;">
@@ -35,12 +35,12 @@
         <MudTd DataLabel="Serial">@context.Serial</MudTd>
         <MudTd DataLabel="Asignado">
             <MudText Typo="Typo.body2">@(context.UsuarioAsignado ?? "Sin Asignar")</MudText>
-            <MudText Typo="Typo.caption" Class="mud-text-secondary">@context.Dependencia?.Nombre</MudText>
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">@(context.Dependencia?.Nombre ?? "N/A")</MudText>
         </MudTd>
         <MudTd DataLabel="QR">
             @if (!string.IsNullOrEmpty(context.QRCodeUrl))
             {
-                <img src="@context.QRCodeUrl" width="40" height="40" class="rounded elevation-1" />
+                <img src="@context.QRCodeUrl" width="40" height="40" class="rounded elevation-1" alt="QR" />
             }
         </MudTd>
         <MudTd DataLabel="Estado">
@@ -85,7 +85,7 @@
         var dialog = await DialogService.ShowAsync<EquipoDialog>("Registrar Activo", parameters, options);
         var result = await dialog.Result;
 
-        if (!result.Canceled) await CargarEquipos();
+        if (result != null && !result.Canceled) await CargarEquipos();
     }
 
     private async Task AbrirDialogoEditar(Equipo equipo)
@@ -103,7 +103,7 @@
         var dialog = await DialogService.ShowAsync<EquipoDialog>("Editar Activo", parameters, options);
         var result = await dialog.Result;
 
-        if (!result.Canceled) await CargarEquipos();
+        if (result != null && !result.Canceled) await CargarEquipos();
     }
 
     private async Task Eliminar(int id)

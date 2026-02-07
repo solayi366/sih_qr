@@ -1,0 +1,106 @@
+@using SGAT_QR.Core.Entities
+@using SGAT_QR.Core.Interfaces
+@inject IPerifericoService PerifericoService
+@inject IEquipoService EquipoService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Color="Color.Primary">
+            <MudIcon Icon="@Icons.Material.Filled.Mouse" Class="mr-3 mb-n1"/>
+            @(Periferico.Id == 0 ? "Registro de Periférico" : "Editar Periférico")
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudAutocomplete T="TipoPeriferico" Label="Tipo" Value="SelectedTipo" ValueChanged="OnTipoChanged"
+                                 SearchFunc="@SearchTipos" ToStringFunc="@(e => e?.Nombre)"
+                                 Variant="Variant.Outlined" Required="true" AdornmentIcon="@Icons.Material.Filled.Category" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudAutocomplete T="string" Label="Marca" @bind-Value="Periferico.Marca"
+                                 SearchFunc="@SearchMarcas" Variant="Variant.Outlined" Required="true" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudAutocomplete T="string" Label="Modelo" @bind-Value="Periferico.Modelo"
+                                 SearchFunc="@SearchModelos" Variant="Variant.Outlined" Required="true"
+                                 Disabled="@(string.IsNullOrEmpty(Periferico.Marca))" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField Label="Serial" @bind-Value="Periferico.Serial" Variant="Variant.Outlined" Required="true" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudAutocomplete T="Equipo" Label="Asignar a Equipo" Value="SelectedEquipo" ValueChanged="OnEquipoChanged"
+                                 SearchFunc="@SearchEquipos" ToStringFunc="@(e => e == null ? "" : $"{e.Nomenclatura} - {e.Marca}")"
+                                 Variant="Variant.Outlined" Clearable="true" AdornmentIcon="@Icons.Material.Filled.Computer" />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancelar</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Guardar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public Periferico Periferico { get; set; } = new();
+    [Parameter] public List<TipoPeriferico> Tipos { get; set; } = new();
+
+    private TipoPeriferico? SelectedTipo;
+    private Equipo? SelectedEquipo;
+    private List<Equipo> _equipos = new();
+
+    private readonly Dictionary<string, List<string>> _catalogo = new()
+    {
+        ["Logitech"] = new() { "G502 Hero", "MX Master 3" },
+        ["HP"] = new() { "W100", "M160" },
+        ["Dell"] = new() { "MS116", "KB216" }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        SelectedTipo = Tipos.FirstOrDefault(x => x.Id == Periferico.TipoPerifericoId);
+        _equipos = await EquipoService.ObtenerTodosAsync() ?? new List<Equipo>();
+        SelectedEquipo = _equipos.FirstOrDefault(x => x.Id == Periferico.EquipoId);
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private Task<IEnumerable<string>> SearchMarcas(string v, CancellationToken t)
+    {
+        if (string.IsNullOrEmpty(v)) return Task.FromResult<IEnumerable<string>>(_catalogo.Keys);
+        return Task.FromResult(_catalogo.Keys.Where(x => x.Contains(v, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private Task<IEnumerable<string>> SearchModelos(string v, CancellationToken t)
+    {
+        if (string.IsNullOrEmpty(Periferico.Marca) || !_catalogo.ContainsKey(Periferico.Marca)) return Task.FromResult<IEnumerable<string>>(new List<string>());
+        var modelos = _catalogo[Periferico.Marca];
+        if (string.IsNullOrEmpty(v)) return Task.FromResult<IEnumerable<string>>(modelos);
+        return Task.FromResult(modelos.Where(x => x.Contains(v, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private Task<IEnumerable<TipoPeriferico>> SearchTipos(string v, CancellationToken t)
+    {
+        if (string.IsNullOrEmpty(v)) return Task.FromResult<IEnumerable<TipoPeriferico>>(Tipos);
+        return Task.FromResult(Tipos.Where(x => x.Nombre.Contains(v, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private Task<IEnumerable<Equipo>> SearchEquipos(string v, CancellationToken t)
+    {
+        if (string.IsNullOrEmpty(v)) return Task.FromResult<IEnumerable<Equipo>>(_equipos);
+        return Task.FromResult(_equipos.Where(x => x.Nomenclatura.Contains(v, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private void OnTipoChanged(TipoPeriferico t) { SelectedTipo = t; Periferico.TipoPerifericoId = t?.Id ?? 0; }
+    private void OnEquipoChanged(Equipo e) { SelectedEquipo = e; Periferico.EquipoId = e?.Id; }
+
+    private async Task Submit()
+    {
+        if (Periferico.TipoPerifericoId == 0 || string.IsNullOrEmpty(Periferico.Serial)) return;
+        var res = await PerifericoService.GuardarAsync(Periferico);
+        if (res) MudDialog.Close(DialogResult.Ok(true));
+    }
+}
