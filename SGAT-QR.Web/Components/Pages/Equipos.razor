@@ -7,16 +7,16 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<MudText Typo="Typo.h4" Color="Color.Primary" Class="mb-6 font-weight-bold">Control de Inventario TI</MudText>
+<MudText Typo="Typo.h4" Color="Color.Primary" Class="mb-6 font-weight-bold">Inventario de Equipos</MudText>
 
 <MudTable Items="@_equipos" Hover="true" Elevation="4" Loading="@_loading" 
           Filter="new Func<Equipo,bool>(FilterFunc1)" Class="rounded-lg border-t-4 border-solid" Style="border-color: #9B111E;">
     <ToolBarContent>
         <MudButton Variant="Variant.Filled" Color="Color.Primary" 
                    StartIcon="@Icons.Material.Filled.Add" OnClick="AbrirDialogoNuevo" 
-                   Class="rounded-pill px-6">Nuevo Equipo</MudButton>
+                   Class="rounded-pill px-6">Nuevo Activo</MudButton>
         <MudSpacer />
-        <MudTextField @bind-Value="_searchString" Placeholder="Buscar por Nomenclatura, Serial o Marca..." 
+        <MudTextField @bind-Value="_searchString" Placeholder="Buscar por Nomenclatura, Marca o Serial..." 
                       Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" 
                       IconSize="Size.Medium" Class="mt-0" Immediate="true" />
     </ToolBarContent>
@@ -24,35 +24,31 @@
         <MudTh Style="background-color: #9B111E; color: white;">Nomenclatura</MudTh>
         <MudTh Style="background-color: #9B111E; color: white;">Marca / Modelo</MudTh>
         <MudTh Style="background-color: #9B111E; color: white;">Serial</MudTh>
-        <MudTh Style="background-color: #9B111E; color: white;">Usuario / Área</MudTh>
         <MudTh Style="background-color: #9B111E; color: white;">QR</MudTh>
         <MudTh Style="background-color: #9B111E; color: white;">Estado</MudTh>
-        <MudTh Style="background-color: #9B111E; color: white; width: 100px;">Acciones</MudTh>
+        <MudTh Style="background-color: #9B111E; color: white; width: 150px;">Acciones</MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Nomenclatura">@context.Nomenclatura</MudTd>
         <MudTd DataLabel="Marca/Modelo">@($"{context.Marca} {context.Modelo}")</MudTd>
         <MudTd DataLabel="Serial">@context.Serial</MudTd>
-        <MudTd DataLabel="Asignado">
-            <MudText Typo="Typo.body2">@(context.UsuarioAsignado ?? "Sin Asignar")</MudText>
-            <MudText Typo="Typo.caption" Class="mud-text-secondary">@(context.Dependencia?.Nombre ?? "N/A")</MudText>
-        </MudTd>
         <MudTd DataLabel="QR">
             @if (!string.IsNullOrEmpty(context.QRCodeUrl))
             {
-                <img src="@context.QRCodeUrl" width="40" height="40" class="rounded elevation-1" alt="QR" />
+                <img src="@context.QRCodeUrl" width="40" height="40" class="rounded cursor-pointer" @onclick="@(() => VerDetalle(context))" />
             }
         </MudTd>
         <MudTd DataLabel="Estado">
             <MudChip T="string" Color="@(context.Estado == "Activo" ? Color.Success : Color.Error)" Size="Size.Small">@context.Estado</MudChip>
         </MudTd>
         <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Primary" Size="Size.Small" OnClick="@(() => VerDetalle(context))" />
             <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Info" Size="Size.Small" OnClick="@(() => AbrirDialogoEditar(context))" />
             <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => Eliminar(context.Id))" />
         </MudTd>
     </RowTemplate>
     <PagerContent>
-        <MudTablePager RowsPerPageString="Registros por página:" />
+        <MudTablePager RowsPerPageString="Registros:" />
     </PagerContent>
 </MudTable>
 
@@ -70,40 +66,31 @@
         _loading = false;
     }
 
+    private async Task VerDetalle(Equipo equipo)
+    {
+        var parameters = new DialogParameters { ["Equipo"] = equipo };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+        await DialogService.ShowAsync<EquipoDetalleDialog>("Detalle del Activo", parameters, options);
+    }
+
     private async Task AbrirDialogoNuevo()
     {
         var tipos = await EquipoService.ObtenerTiposAsync();
         var deps = await EquipoService.ObtenerDependenciasAsync();
-
-        var parameters = new DialogParameters { 
-            ["Equipo"] = new Equipo { Estado = "Activo" },
-            ["Tipos"] = tipos,
-            ["Dependencias"] = deps
-        };
-
+        var parameters = new DialogParameters { ["Equipo"] = new Equipo { Estado = "Activo" }, ["Tipos"] = tipos, ["Dependencias"] = deps };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
         var dialog = await DialogService.ShowAsync<EquipoDialog>("Registrar Activo", parameters, options);
-        var result = await dialog.Result;
-
-        if (result != null && !result.Canceled) await CargarEquipos();
+        if (!(await dialog.Result).Canceled) await CargarEquipos();
     }
 
     private async Task AbrirDialogoEditar(Equipo equipo)
     {
         var tipos = await EquipoService.ObtenerTiposAsync();
         var deps = await EquipoService.ObtenerDependenciasAsync();
-
-        var parameters = new DialogParameters { 
-            ["Equipo"] = equipo,
-            ["Tipos"] = tipos,
-            ["Dependencias"] = deps
-        };
-
+        var parameters = new DialogParameters { ["Equipo"] = equipo, ["Tipos"] = tipos, ["Dependencias"] = deps };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
         var dialog = await DialogService.ShowAsync<EquipoDialog>("Editar Activo", parameters, options);
-        var result = await dialog.Result;
-
-        if (result != null && !result.Canceled) await CargarEquipos();
+        if (!(await dialog.Result).Canceled) await CargarEquipos();
     }
 
     private async Task Eliminar(int id)
@@ -118,7 +105,6 @@
         if (string.IsNullOrWhiteSpace(searchString)) return true;
         if (element.Nomenclatura.Contains(searchString, StringComparison.OrdinalIgnoreCase)) return true;
         if (element.Serial.Contains(searchString, StringComparison.OrdinalIgnoreCase)) return true;
-        if (element.Marca.Contains(searchString, StringComparison.OrdinalIgnoreCase)) return true;
         return false;
     }
 }

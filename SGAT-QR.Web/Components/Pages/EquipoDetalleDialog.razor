@@ -1,0 +1,96 @@
+@using SGAT_QR.Core.Entities
+@using MudBlazor
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h5" Color="Color.Primary" Class="font-weight-bold">
+            <MudIcon Icon="@Icons.Material.Filled.Info" Class="mr-2 mb-1"/>
+            Ficha Técnica: @Equipo.Nomenclatura
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudGrid>
+            @* Lado Izquierdo: Información Técnica *@
+            <MudItem xs="12" md="7">
+                <MudCard Elevation="0" Outlined="true" Class="pa-4 rounded-lg">
+                    <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="font-weight-bold mb-2">Información del Activo</MudText>
+                    <MudDivider Class="mb-4" />
+                    
+                    <MudSimpleTable Style="overflow-x: auto;" Elevation="0">
+                        <tbody>
+                            <tr>
+                                <td style="width: 35%;" class="font-weight-bold">Marca / Modelo:</td>
+                                <td>@Equipo.Marca @Equipo.Modelo</td>
+                            </tr>
+                            <tr>
+                                <td class="font-weight-bold">Serial:</td>
+                                <td>@Equipo.Serial</td>
+                            </tr>
+                            <tr>
+                                <td class="font-weight-bold">Tipo:</td>
+                                <td>@Equipo.TipoEquipo?.Nombre</td>
+                            </tr>
+                            <tr>
+                                <td class="font-weight-bold">Procesador:</td>
+                                <td>@(Equipo.Procesador ?? "N/A")</td>
+                            </tr>
+                            <tr>
+                                <td class="font-weight-bold">RAM / Disco:</td>
+                                <td>@(Equipo.RAM ?? "N/A") / @(Equipo.Disco ?? "N/A")</td>
+                            </tr>
+                            <tr>
+                                <td class="font-weight-bold">S.O.:</td>
+                                <td>@(Equipo.SistemaOperativo ?? "N/A") @(Equipo.VersionSO ?? "")</td>
+                            </tr>
+                            <tr>
+                                <td class="font-weight-bold">Red (IP/MAC):</td>
+                                <td>@(Equipo.IP ?? "0.0.0.0") / @(Equipo.MAC ?? "N/A")</td>
+                            </tr>
+                            <tr>
+                                <td class="font-weight-bold">Ubicación:</td>
+                                <td>@(Equipo.Ubicacion ?? "No especificada")</td>
+                            </tr>
+                            <tr>
+                                <td class="font-weight-bold">Estado:</td>
+                                <td>
+                                    <MudChip T="string" Color="@(Equipo.Estado == "Activo" ? Color.Success : Color.Error)" Size="Size.Small">
+                                        @Equipo.Estado
+                                    </MudChip>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </MudSimpleTable>
+                </MudCard>
+            </MudItem>
+
+            @* Lado Derecho: Código QR Grande *@
+            <MudItem xs="12" md="5" Class="d-flex flex-column align-center justify-center">
+                <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-4">Código de Rastreo QR</MudText>
+                @if (!string.IsNullOrEmpty(Equipo.QRCodeUrl))
+                {
+                    <MudPaper Elevation="8" Class="pa-4 rounded-lg d-flex align-center justify-center bg-white">
+                        <MudImage Src="@Equipo.QRCodeUrl" Width="250" Height="250" Alt="QR Code" ObjectFit="ObjectFit.Contain" />
+                    </MudPaper>
+                    <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Download" Color="Color.Primary" Class="mt-4"
+                               Href="@Equipo.QRCodeUrl" download="@($"QR_{Equipo.Nomenclatura}.png")">
+                        Descargar Imagen
+                    </MudButton>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Warning">QR no generado</MudAlert>
+                }
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cerrar" Color="Color.Default" Variant="Variant.Filled">Cerrar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public Equipo Equipo { get; set; } = new();
+
+    private void Cerrar() => MudDialog.Close();
+}
