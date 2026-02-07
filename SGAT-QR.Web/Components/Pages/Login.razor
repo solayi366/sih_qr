@@ -1,0 +1,50 @@
+@page "/login"
+@using Microsoft.AspNetCore.Antiforgery
+@layout SGAT_QR.Web.Components.Layout.MainLayout
+@inject NavigationManager NavigationManager
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center justify-center" Style="height: 100vh;">
+    <MudPaper Elevation="8" Class="pa-10 rounded-lg" Width="100%">
+        <div class="text-center mb-8">
+            <MudIcon Icon="@Icons.Material.Filled.QrCodeScanner" Color="Color.Primary" Style="font-size: 4rem;" />
+            <MudText Typo="Typo.h4" Color="Color.Primary" Class="font-weight-bold">SGAT-QR</MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary">Gestión de Activos TI</MudText>
+        </div>
+
+        <form action="api/auth/login" method="post">
+            @* Este token es obligatorio en .NET 8 para peticiones POST *@
+            <AntiforgeryToken />
+
+            <div class="mud-input-control mud-input-input-control mb-4">
+                <div class="mud-input-control-input-container">
+                    <div class="mud-input mud-input-outlined mud-input-adorned-start mud-input-margin-default">
+                        <MudIcon Icon="@Icons.Material.Filled.Email" Class="ml-3" Color="Color.Default" />
+                        <input name="email" type="email" class="mud-input-slot mud-input-root mud-input-root-outlined pa-4" 
+                               placeholder="Correo Electrónico" required style="width: 100%; border: none; outline: none; background: transparent;" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="mud-input-control mud-input-input-control mb-6">
+                <div class="mud-input-control-input-container">
+                    <div class="mud-input mud-input-outlined mud-input-adorned-start mud-input-margin-default">
+                        <MudIcon Icon="@Icons.Material.Filled.Lock" Class="ml-3" Color="Color.Default" />
+                        <input name="password" type="password" class="mud-input-slot mud-input-root mud-input-root-outlined pa-4" 
+                               placeholder="Contraseña" required style="width: 100%; border: none; outline: none; background: transparent;" />
+                    </div>
+                </div>
+            </div>
+
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" 
+                       Color="Color.Primary" FullWidth="true" Size="Size.Large" 
+                       Class="rounded-pill py-3">
+                ACCEDER AL PANEL
+            </MudButton>
+        </form>
+
+        @if (NavigationManager.Uri.Contains("error"))
+        {
+            <MudAlert Severity="Severity.Error" Class="mt-4" Variant="Variant.Filled">Credenciales incorrectas</MudAlert>
+        }
+    </MudPaper>
+</MudContainer>

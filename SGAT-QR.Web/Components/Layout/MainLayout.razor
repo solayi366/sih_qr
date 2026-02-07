@@ -1,0 +1,47 @@
+﻿@inherits LayoutComponentBase
+@using MudBlazor
+
+<MudThemeProvider Theme="_rubyTheme" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="1" Color="Color.Primary">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+        <MudText Typo="Typo.h5" Class="ml-3 font-weight-bold">SGAT-QR</MudText>
+        <MudSpacer />
+        <MudMenu Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit" AnchorOrigin="Origin.BottomRight">
+            <MudMenuItem href="/api/auth/logout">Cerrar Sesión</MudMenuItem>
+        </MudMenu>
+    </MudAppBar>
+    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
+        <MudNavMenu>
+            <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="ml-4 mt-3 mb-2 font-weight-bold">GENERAL</MudText>
+            <MudNavLink href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
+            <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="ml-4 mt-3 mb-2 font-weight-bold">INVENTARIO</MudText>
+            <MudNavLink href="/equipos" Icon="@Icons.Material.Filled.Computer">Equipos</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4 pt-4">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    bool _drawerOpen = true;
+    void DrawerToggle() => _drawerOpen = !_drawerOpen;
+
+    private MudTheme _rubyTheme = new MudTheme()
+    {
+        PaletteLight = new PaletteLight()
+        {
+            Primary = "#9B111E",
+            AppbarBackground = "#9B111E",
+            Background = "#F8F9FA",
+            ActionDefault = "#9B111E"
+        }
+    };
+}

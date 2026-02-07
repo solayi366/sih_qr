@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SGAT-QR.Web", "SGAT-QR.Web\SGAT-QR.Web.csproj", "{BD4EA88E-E2D9-4BDA-9B61-E60F39BB8419}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SGAT-QR.Core", "SGAT-QR.Core\SGAT-QR.Core.csproj", "{74D65631-F3EA-463A-9A8A-59B96CB4591C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SGAT-QR.Infrastructure", "SGAT-QR.Infrastructure\SGAT-QR.Infrastructure.csproj", "{526799D8-0929-491D-934E-2A5C3A599A07}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BD4EA88E-E2D9-4BDA-9B61-E60F39BB8419}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD4EA88E-E2D9-4BDA-9B61-E60F39BB8419}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD4EA88E-E2D9-4BDA-9B61-E60F39BB8419}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD4EA88E-E2D9-4BDA-9B61-E60F39BB8419}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74D65631-F3EA-463A-9A8A-59B96CB4591C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74D65631-F3EA-463A-9A8A-59B96CB4591C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74D65631-F3EA-463A-9A8A-59B96CB4591C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74D65631-F3EA-463A-9A8A-59B96CB4591C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{526799D8-0929-491D-934E-2A5C3A599A07}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{526799D8-0929-491D-934E-2A5C3A599A07}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{526799D8-0929-491D-934E-2A5C3A599A07}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{526799D8-0929-491D-934E-2A5C3A599A07}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

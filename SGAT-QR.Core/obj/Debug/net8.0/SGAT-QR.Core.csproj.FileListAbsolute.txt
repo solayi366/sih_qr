@@ -1,0 +1,12 @@
+C:\SGAT\SGAT-QR.Core\bin\Debug\net8.0\SGAT-QR.Core.deps.json
+C:\SGAT\SGAT-QR.Core\bin\Debug\net8.0\SGAT-QR.Core.dll
+C:\SGAT\SGAT-QR.Core\bin\Debug\net8.0\SGAT-QR.Core.pdb
+C:\SGAT\SGAT-QR.Core\obj\Debug\net8.0\SGAT-QR.Core.csproj.AssemblyReference.cache
+C:\SGAT\SGAT-QR.Core\obj\Debug\net8.0\SGAT-QR.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\SGAT\SGAT-QR.Core\obj\Debug\net8.0\SGAT-QR.Core.AssemblyInfoInputs.cache
+C:\SGAT\SGAT-QR.Core\obj\Debug\net8.0\SGAT-QR.Core.AssemblyInfo.cs
+C:\SGAT\SGAT-QR.Core\obj\Debug\net8.0\SGAT-QR.Core.csproj.CoreCompileInputs.cache
+C:\SGAT\SGAT-QR.Core\obj\Debug\net8.0\SGAT-QR.Core.dll
+C:\SGAT\SGAT-QR.Core\obj\Debug\net8.0\refint\SGAT-QR.Core.dll
+C:\SGAT\SGAT-QR.Core\obj\Debug\net8.0\SGAT-QR.Core.pdb
+C:\SGAT\SGAT-QR.Core\obj\Debug\net8.0\ref\SGAT-QR.Core.dll

@@ -1,0 +1,17 @@
+C:\SGAT\SGAT-QR.Infrastructure\bin\Debug\net8.0\SGAT-QR.Infrastructure.deps.json
+C:\SGAT\SGAT-QR.Infrastructure\bin\Debug\net8.0\SGAT-QR.Infrastructure.runtimeconfig.json
+C:\SGAT\SGAT-QR.Infrastructure\bin\Debug\net8.0\SGAT-QR.Infrastructure.dll
+C:\SGAT\SGAT-QR.Infrastructure\bin\Debug\net8.0\SGAT-QR.Infrastructure.pdb
+C:\SGAT\SGAT-QR.Infrastructure\bin\Debug\net8.0\SGAT-QR.Core.dll
+C:\SGAT\SGAT-QR.Infrastructure\bin\Debug\net8.0\SGAT-QR.Core.pdb
+C:\SGAT\SGAT-QR.Infrastructure\obj\Debug\net8.0\SGAT-QR.Infrastructure.csproj.AssemblyReference.cache
+C:\SGAT\SGAT-QR.Infrastructure\obj\Debug\net8.0\SGAT-QR.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+C:\SGAT\SGAT-QR.Infrastructure\obj\Debug\net8.0\SGAT-QR.Infrastructure.AssemblyInfoInputs.cache
+C:\SGAT\SGAT-QR.Infrastructure\obj\Debug\net8.0\SGAT-QR.Infrastructure.AssemblyInfo.cs
+C:\SGAT\SGAT-QR.Infrastructure\obj\Debug\net8.0\SGAT-QR.Infrastructure.csproj.CoreCompileInputs.cache
+C:\SGAT\SGAT-QR.Infrastructure\obj\Debug\net8.0\SGAT-QR..751CA7E8.Up2Date
+C:\SGAT\SGAT-QR.Infrastructure\obj\Debug\net8.0\SGAT-QR.Infrastructure.dll
+C:\SGAT\SGAT-QR.Infrastructure\obj\Debug\net8.0\refint\SGAT-QR.Infrastructure.dll
+C:\SGAT\SGAT-QR.Infrastructure\obj\Debug\net8.0\SGAT-QR.Infrastructure.pdb
+C:\SGAT\SGAT-QR.Infrastructure\obj\Debug\net8.0\SGAT-QR.Infrastructure.genruntimeconfig.cache
+C:\SGAT\SGAT-QR.Infrastructure\obj\Debug\net8.0\ref\SGAT-QR.Infrastructure.dll
