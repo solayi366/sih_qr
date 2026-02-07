@@ -10,11 +10,11 @@ using Microsoft.AspNetCore.Components.Server;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Base de Datos
+// 1. Conexión a Base de Datos
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 
-// 2. Seguridad
+// 2. Configuración de Identidad (Identity)
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
 
@@ -26,19 +26,20 @@ builder.Services.AddIdentity<Usuario, IdentityRole<int>>(options => {
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-// 3. UI y Servicios
+// 3. Servicios de Interfaz y MudBlazor
 builder.Services.AddControllersWithViews();
 builder.Services.AddMudServices();
-builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
 
-// REGISTRO DE SERVICIOS SGAT
+// 4. Registro de Servicios de Capa de Infraestructura
 builder.Services.AddScoped<IEquipoService, EquipoService>();
 builder.Services.AddScoped<IPerifericoService, PerifericoService>();
 builder.Services.AddScoped<INovedadService, NovedadService>();
 
 var app = builder.Build();
 
-// 4. Seed Data
+// 5. Inicialización de Datos (Seed)
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -48,14 +49,26 @@ using (var scope = app.Services.CreateScope())
     DbInitializer.Initialize(context, userManager, roleManager).GetAwaiter().GetResult();
 }
 
+// 6. Pipeline de Solicitudes HTTP
+if (app.Environment.IsDevelopment())
+{
+    app.UseMigrationsEndPoint();
+}
+else
+{
+    app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    app.UseHsts();
+}
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-app.UseRouting();
+app.UseRouting(); // Importante: Routing antes de Auth
 app.UseAntiforgery();
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers(); 
-app.MapRazorComponents<SGAT_QR.Web.Components.App>().AddInteractiveServerRenderMode();
+app.MapRazorComponents<SGAT_QR.Web.Components.App>()
+    .AddInteractiveServerRenderMode();
 
 app.Run();

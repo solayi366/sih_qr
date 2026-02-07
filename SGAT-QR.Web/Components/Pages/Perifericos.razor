@@ -6,29 +6,31 @@
 @inject IPerifericoService PerifericoService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject IJSRuntime JS
 
-<MudText Typo="Typo.h4" Color="Color.Primary" Class="mb-6 font-weight-bold">Inventario de Periféricos</MudText>
+<MudText Typo="Typo.h4" Color="Color.Secondary" Class="mb-6 font-weight-bold">Inventario de Periféricos</MudText>
 
 <MudTable Items="@_perifericos" Hover="true" Elevation="4" Loading="@_loading" 
           Filter="new Func<Periferico,bool>(FilterFunc1)" 
-          Class="rounded-lg border-t-4 border-solid" Style="border-color: #9B111E;">
+          Class="rounded-lg border-t-4 border-solid" Style="border-color: #263238;">
     <ToolBarContent>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" 
+        <MudButton Variant="Variant.Filled" Color="Color.Secondary" 
                    StartIcon="@Icons.Material.Filled.Add" OnClick="AbrirNuevo" 
-                   Class="rounded-pill px-6">Nuevo Periférico</MudButton>
+                   Class="rounded-pill px-6 mr-2">Nuevo Periférico</MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Custom.FileFormats.FileExcel" 
+                   OnClick="ExportarExcel" Class="rounded-pill px-6">Exportar</MudButton>
         <MudSpacer />
         <MudTextField @bind-Value="_search" Placeholder="Buscar por serial o marca..." 
                       Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" 
                       Class="mt-0" Immediate="true" />
     </ToolBarContent>
     <HeaderContent>
-        <MudTh Style="background-color: #9B111E; color: white;">Tipo</MudTh>
-        <MudTh Style="background-color: #9B111E; color: white;">Marca / Modelo</MudTh>
-        <MudTh Style="background-color: #9B111E; color: white;">Serial</MudTh>
-        <MudTh Style="background-color: #9B111E; color: white;">Equipo Vinculado</MudTh>
-        <MudTh Style="background-color: #9B111E; color: white;">QR</MudTh>
-        <MudTh Style="background-color: #9B111E; color: white;">Estado</MudTh>
-        <MudTh Style="background-color: #9B111E; color: white; width: 120px;">Acciones</MudTh>
+        <MudTh Style="background-color: #263238; color: white;">Tipo</MudTh>
+        <MudTh Style="background-color: #263238; color: white;">Marca / Modelo</MudTh>
+        <MudTh Style="background-color: #263238; color: white;">Serial</MudTh>
+        <MudTh Style="background-color: #263238; color: white;">Equipo Vinculado</MudTh>
+        <MudTh Style="background-color: #263238; color: white;">QR</MudTh>
+        <MudTh Style="background-color: #263238; color: white; width: 150px;">Acciones</MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Tipo">@(context.TipoPeriferico?.Nombre ?? "N/A")</MudTd>
@@ -38,31 +40,22 @@
             @if (context.Equipo != null)
             {
                 <MudChip T="string" Icon="@Icons.Material.Filled.Link" Color="Color.Info" Size="Size.Small">
-                    @(context.Equipo.Nomenclatura ?? "S/N")
+                    @(context.Equipo?.Nomenclatura ?? "S/N")
                 </MudChip>
-            }
-            else
-            {
-                <MudText Typo="Typo.caption" Class="mud-text-Primary">Sin asignar</MudText>
             }
         </MudTd>
         <MudTd DataLabel="QR">
             @if (!string.IsNullOrEmpty(context.QRCodeUrl))
             {
-                <img src="@context.QRCodeUrl" width="40" height="40" class="rounded shadow-sm" alt="QR" />
+                <img src="@context.QRCodeUrl" width="40" height="40" class="rounded cursor-pointer" @onclick="@(() => VerDetalle(context))" />
             }
         </MudTd>
-        <MudTd DataLabel="Estado">
-            <MudChip T="string" Color="@(context.Estado == "Activo" ? Color.Success : Color.Error)" Size="Size.Small">@context.Estado</MudChip>
-        </MudTd>
         <MudTd>
-            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Info" Size="Size.Small" OnClick="@(() => AbrirEditar(context))" />
-            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => Eliminar(context.Id))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Primary" OnClick="@(() => VerDetalle(context))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Info" OnClick="@(() => AbrirEditar(context))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => Eliminar(context.Id))" />
         </MudTd>
     </RowTemplate>
-    <PagerContent>
-        <MudTablePager RowsPerPageString="Filas:" />
-    </PagerContent>
 </MudTable>
 
 @code {
@@ -79,47 +72,45 @@
         _loading = false;
     }
 
+    private async Task ExportarExcel()
+    {
+        var bytes = await PerifericoService.GenerarExcelAsync();
+        await JS.InvokeVoidAsync("descargarArchivo", $"Perifericos_{DateTime.Now:yyyyMMdd}.xlsx", Convert.ToBase64String(bytes));
+        Snackbar.Add("Excel generado con éxito", Severity.Success);
+    }
+
+    private async Task VerDetalle(Periferico p)
+    {
+        var parameters = new DialogParameters { ["Periferico"] = p };
+        await DialogService.ShowAsync<PerifericoDetalleDialog>("Ficha de Periférico", parameters, new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
+    }
+
     private async Task AbrirNuevo()
     {
         var tipos = await PerifericoService.ObtenerTiposAsync();
         var parameters = new DialogParameters { ["Periferico"] = new Periferico(), ["Tipos"] = tipos };
-        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
-        
-        var dialog = await DialogService.ShowAsync<PerifericoDialog>("Registrar Periférico", parameters, options);
-        var result = await dialog.Result;
-        
-        if (result != null && !result.Canceled) await Cargar();
+        var dialog = await DialogService.ShowAsync<PerifericoDialog>("Registrar", parameters, new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        if (!(await dialog.Result).Canceled) await Cargar();
     }
 
     private async Task AbrirEditar(Periferico p)
     {
         var tipos = await PerifericoService.ObtenerTiposAsync();
         var parameters = new DialogParameters { ["Periferico"] = p, ["Tipos"] = tipos };
-        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
-        
-        var dialog = await DialogService.ShowAsync<PerifericoDialog>("Editar Periférico", parameters, options);
-        var result = await dialog.Result;
-        
-        if (result != null && !result.Canceled) await Cargar();
+        var dialog = await DialogService.ShowAsync<PerifericoDialog>("Editar", parameters, new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        if (!(await dialog.Result).Canceled) await Cargar();
     }
 
     private async Task Eliminar(int id)
     {
-        bool? confirm = await DialogService.ShowMessageBox("Confirmar", "¿Desea eliminar este periférico?", "Eliminar", "Cancelar");
-        if (confirm == true && await PerifericoService.EliminarAsync(id))
-        {
-            Snackbar.Add("Periférico eliminado", Severity.Warning);
-            await Cargar();
-        }
+        if (await PerifericoService.EliminarAsync(id)) await Cargar();
     }
 
     private bool FilterFunc1(Periferico element) => FilterFunc(element, _search);
     private bool FilterFunc(Periferico element, string searchString)
     {
         if (string.IsNullOrWhiteSpace(searchString)) return true;
-        if (element.Serial.Contains(searchString, StringComparison.OrdinalIgnoreCase)) return true;
-        if (element.Marca.Contains(searchString, StringComparison.OrdinalIgnoreCase)) return true;
-        if (element.Modelo.Contains(searchString, StringComparison.OrdinalIgnoreCase)) return true;
-        return false;
+        return element.Serial.Contains(searchString, StringComparison.OrdinalIgnoreCase) || 
+               element.Marca.Contains(searchString, StringComparison.OrdinalIgnoreCase);
     }
 }

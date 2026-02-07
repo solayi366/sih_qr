@@ -6,19 +6,20 @@
 @inject IEquipoService EquipoService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject IJSRuntime JS
 
 <MudText Typo="Typo.h4" Color="Color.Primary" Class="mb-6 font-weight-bold">Inventario de Equipos</MudText>
 
 <MudTable Items="@_equipos" Hover="true" Elevation="4" Loading="@_loading" 
           Filter="new Func<Equipo,bool>(FilterFunc1)" Class="rounded-lg border-t-4 border-solid" Style="border-color: #9B111E;">
     <ToolBarContent>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" 
-                   StartIcon="@Icons.Material.Filled.Add" OnClick="AbrirDialogoNuevo" 
-                   Class="rounded-pill px-6">Nuevo Activo</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" 
+                   OnClick="AbrirDialogoNuevo" Class="rounded-pill px-6 mr-2">Nuevo Activo</MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Custom.FileFormats.FileExcel" 
+                   OnClick="ExportarExcel" Class="rounded-pill px-6">Exportar</MudButton>
         <MudSpacer />
-        <MudTextField @bind-Value="_searchString" Placeholder="Buscar por Nomenclatura, Marca o Serial..." 
-                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" 
-                      IconSize="Size.Medium" Class="mt-0" Immediate="true" />
+        <MudTextField @bind-Value="_searchString" Placeholder="Buscar..." Adornment="Adornment.Start" 
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" />
     </ToolBarContent>
     <HeaderContent>
         <MudTh Style="background-color: #9B111E; color: white;">Nomenclatura</MudTh>
@@ -26,30 +27,27 @@
         <MudTh Style="background-color: #9B111E; color: white;">Serial</MudTh>
         <MudTh Style="background-color: #9B111E; color: white;">QR</MudTh>
         <MudTh Style="background-color: #9B111E; color: white;">Estado</MudTh>
-        <MudTh Style="background-color: #9B111E; color: white; width: 150px;">Acciones</MudTh>
+        <MudTh Style="background-color: #9B111E; color: white; width: 180px;">Acciones</MudTh>
     </HeaderContent>
     <RowTemplate>
-        <MudTd DataLabel="Nomenclatura">@context.Nomenclatura</MudTd>
-        <MudTd DataLabel="Marca/Modelo">@($"{context.Marca} {context.Modelo}")</MudTd>
-        <MudTd DataLabel="Serial">@context.Serial</MudTd>
-        <MudTd DataLabel="QR">
+        <MudTd>@context.Nomenclatura</MudTd>
+        <MudTd>@context.Marca @context.Modelo</MudTd>
+        <MudTd>@context.Serial</MudTd>
+        <MudTd>
             @if (!string.IsNullOrEmpty(context.QRCodeUrl))
             {
                 <img src="@context.QRCodeUrl" width="40" height="40" class="rounded cursor-pointer" @onclick="@(() => VerDetalle(context))" />
             }
         </MudTd>
-        <MudTd DataLabel="Estado">
+        <MudTd>
             <MudChip T="string" Color="@(context.Estado == "Activo" ? Color.Success : Color.Error)" Size="Size.Small">@context.Estado</MudChip>
         </MudTd>
         <MudTd>
-            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Primary" Size="Size.Small" OnClick="@(() => VerDetalle(context))" />
-            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Info" Size="Size.Small" OnClick="@(() => AbrirDialogoEditar(context))" />
-            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => Eliminar(context.Id))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Primary" OnClick="@(() => VerDetalle(context))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Info" OnClick="@(() => AbrirDialogoEditar(context))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => Eliminar(context.Id))" />
         </MudTd>
     </RowTemplate>
-    <PagerContent>
-        <MudTablePager RowsPerPageString="Registros:" />
-    </PagerContent>
 </MudTable>
 
 @code {
@@ -66,11 +64,18 @@
         _loading = false;
     }
 
+    private async Task ExportarExcel()
+    {
+        var bytes = await EquipoService.GenerarExcelAsync();
+        var fileName = $"Inventario_Equipos_{DateTime.Now:yyyyMMdd}.xlsx";
+        await JS.InvokeVoidAsync("descargarArchivo", fileName, Convert.ToBase64String(bytes));
+        Snackbar.Add("Reporte generado con éxito", Severity.Success);
+    }
+
     private async Task VerDetalle(Equipo equipo)
     {
         var parameters = new DialogParameters { ["Equipo"] = equipo };
-        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
-        await DialogService.ShowAsync<EquipoDetalleDialog>("Detalle del Activo", parameters, options);
+        await DialogService.ShowAsync<EquipoDetalleDialog>("Ficha Técnica", parameters, new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
     }
 
     private async Task AbrirDialogoNuevo()
@@ -78,8 +83,7 @@
         var tipos = await EquipoService.ObtenerTiposAsync();
         var deps = await EquipoService.ObtenerDependenciasAsync();
         var parameters = new DialogParameters { ["Equipo"] = new Equipo { Estado = "Activo" }, ["Tipos"] = tipos, ["Dependencias"] = deps };
-        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<EquipoDialog>("Registrar Activo", parameters, options);
+        var dialog = await DialogService.ShowAsync<EquipoDialog>("Registrar", parameters, new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
         if (!(await dialog.Result).Canceled) await CargarEquipos();
     }
 
@@ -88,8 +92,7 @@
         var tipos = await EquipoService.ObtenerTiposAsync();
         var deps = await EquipoService.ObtenerDependenciasAsync();
         var parameters = new DialogParameters { ["Equipo"] = equipo, ["Tipos"] = tipos, ["Dependencias"] = deps };
-        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<EquipoDialog>("Editar Activo", parameters, options);
+        var dialog = await DialogService.ShowAsync<EquipoDialog>("Editar", parameters, new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
         if (!(await dialog.Result).Canceled) await CargarEquipos();
     }
 
@@ -103,8 +106,7 @@
     private bool FilterFunc(Equipo element, string searchString)
     {
         if (string.IsNullOrWhiteSpace(searchString)) return true;
-        if (element.Nomenclatura.Contains(searchString, StringComparison.OrdinalIgnoreCase)) return true;
-        if (element.Serial.Contains(searchString, StringComparison.OrdinalIgnoreCase)) return true;
-        return false;
+        return element.Nomenclatura.Contains(searchString, StringComparison.OrdinalIgnoreCase) || 
+               element.Serial.Contains(searchString, StringComparison.OrdinalIgnoreCase);
     }
 }

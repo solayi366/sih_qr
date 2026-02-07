@@ -10,5 +10,6 @@ public interface IEquipoService
     Task<List<Dependencia>> ObtenerDependenciasAsync();
     Task<bool> GuardarAsync(Equipo equipo);
     Task<bool> EliminarAsync(int id);
-    Task<int> ContarTotalAsync(); // Método para el Dashboard
+    Task<int> ContarTotalAsync();
+    Task<byte[]> GenerarExcelAsync();
 }

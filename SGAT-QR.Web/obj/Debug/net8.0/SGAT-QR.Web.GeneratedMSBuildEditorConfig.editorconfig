@@ -61,6 +61,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xOb3ZlZGFkZXMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/SGAT/SGAT-QR.Web/Components/Pages/PerifericoDetalleDialog.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xQZXJpZmVyaWNvRGV0YWxsZURpYWxvZy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/SGAT/SGAT-QR.Web/Components/Pages/PerifericoDialog.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50c1xQYWdlc1xQZXJpZmVyaWNvRGlhbG9nLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 

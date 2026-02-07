@@ -9,9 +9,13 @@
                     <Login />
                 </NotAuthorized>
             </AuthorizeRouteView>
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
         </Found>
         <NotFound>
-            <p>No encontrado.</p>
+            <PageTitle>No encontrado</PageTitle>
+            <LayoutView Layout="@typeof(Layout.MainLayout)">
+                <MudAlert Severity="Severity.Error">Lo sentimos, no hay nada en esta dirección.</MudAlert>
+            </LayoutView>
         </NotFound>
     </Router>
 </CascadingAuthenticationState>

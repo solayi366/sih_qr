@@ -1,0 +1,55 @@
+@using SGAT_QR.Core.Entities
+@using MudBlazor
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h5" Color="Color.Secondary" Class="font-weight-bold">
+            <MudIcon Icon="@Icons.Material.Filled.Info" Class="mr-2 mb-1"/>
+            Ficha Técnica: @Periferico.Serial
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" md="7">
+                <MudCard Elevation="0" Outlined="true" Class="pa-4 rounded-lg">
+                    <MudText Typo="Typo.subtitle1" Color="Color.Secondary" Class="font-weight-bold mb-2">Detalles del Periférico</MudText>
+                    <MudDivider Class="mb-4" />
+                    <MudSimpleTable Elevation="0">
+                        <tbody>
+                            <tr><td class="font-weight-bold">Tipo:</td><td>@(Periferico.TipoPeriferico?.Nombre ?? "N/A")</td></tr>
+                            <tr><td class="font-weight-bold">Marca / Modelo:</td><td>@Periferico.Marca @Periferico.Modelo</td></tr>
+                            <tr><td class="font-weight-bold">Serial:</td><td>@Periferico.Serial</td></tr>
+                            <tr><td class="font-weight-bold">Vinculado a:</td><td>@(Periferico.Equipo?.Nomenclatura ?? "Libre (Sin asignar)")</td></tr>
+                            <tr><td class="font-weight-bold">Estado:</td><td>
+                                <MudChip T="string" Color="@(Periferico.Estado == "Activo" ? Color.Success : Color.Error)" Size="Size.Small">@Periferico.Estado</MudChip>
+                            </td></tr>
+                        </tbody>
+                    </MudSimpleTable>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" md="5" Class="d-flex flex-column align-center justify-center">
+                <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-4">Código QR</MudText>
+                @if (!string.IsNullOrEmpty(Periferico.QRCodeUrl))
+                {
+                    <MudPaper Elevation="8" Class="pa-4 rounded-lg bg-white">
+                        <MudImage Src="@Periferico.QRCodeUrl" Width="220" Height="220" ObjectFit="ObjectFit.Contain" />
+                    </MudPaper>
+                    <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.Download" Color="Color.Secondary" Class="mt-4"
+                               Href="@Periferico.QRCodeUrl" download="@($"QR_{Periferico.Serial}.png")">
+                        Descargar Imagen
+                    </MudButton>
+                }
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cerrar" Color="Color.Default" Variant="Variant.Filled">Cerrar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public Periferico Periferico { get; set; } = new();
+    private void Cerrar() => MudDialog.Close();
+}

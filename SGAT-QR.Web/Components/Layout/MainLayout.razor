@@ -16,14 +16,7 @@
         </MudMenu>
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
-        <MudNavMenu>
-            <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="ml-4 mt-3 mb-2 font-weight-bold">GENERAL</MudText>
-            <MudNavLink href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
-            <MudText Typo="Typo.subtitle2" Color="Color.Primary" Class="ml-4 mt-3 mb-2 font-weight-bold">INVENTARIO</MudText>
-            <MudNavLink href="/equipos" Icon="@Icons.Material.Filled.Computer">Equipos</MudNavLink>
-            <MudNavLink href="/perifericos" Icon="@Icons.Material.Filled.Mouse">Perifericos</MudNavLink>
-            <MudNavLink href="/novedades" Icon="@Icons.Material.Filled.ReportProblem">Novedades</MudNavLink>
-        </MudNavMenu>
+        <NavMenu />
     </MudDrawer>
     <MudMainContent>
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4 pt-4">
@@ -40,8 +33,9 @@
     {
         PaletteLight = new PaletteLight()
         {
-            Primary = "#9B111E",
+            Primary = "#9B111E", // Rojo Ruby Principal
             AppbarBackground = "#9B111E",
+            Secondary = "#263238", // Gris oscuro para periféricos
             Background = "#F8F9FA",
             ActionDefault = "#9B111E"
         }

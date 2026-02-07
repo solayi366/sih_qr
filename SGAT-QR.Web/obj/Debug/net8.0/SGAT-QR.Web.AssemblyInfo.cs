@@ -10,6 +10,7 @@
 using System;
 using System.Reflection;
 
+[assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("aspnet-SGAT_QR.Web-4c7a5b3a-1234-5678-90ab-cdef12345678")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("SGAT-QR.Web")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
